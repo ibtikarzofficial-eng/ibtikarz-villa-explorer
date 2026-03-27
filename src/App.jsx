@@ -1,120 +1,89 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
+import { Suspense, useState } from 'react'
+import { Canvas } from '@react-three/fiber'
+import {
+  OrbitControls,
+  PerspectiveCamera,
+  Environment,
+  ContactShadows,
+  BakeShadows,
+  Loader
+} from '@react-three/drei'
 import './App.css'
 
+// Placeholder Model Component (We will drop your .glb here next)
+function VillaModel({ mode }) {
+  return (
+    <mesh>
+      <boxGeometry args={[2, 1, 2]} />
+      <meshStandardMaterial color={mode === 'exterior' ? "#d4af37" : "#ffffff"} />
+    </mesh>
+  )
+}
+
 function App() {
-  const [count, setCount] = useState(0)
+  const [view, setView] = useState('exterior') // State: exterior | interior
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
+    <div className="relative w-full h-screen bg-[#0a0a0a] overflow-hidden">
+
+      {/* 1. THE 3D CANVAS */}
+      <Canvas shadows dpr={[1, 2]}>
+        <PerspectiveCamera makeDefault position={[8, 5, 8]} fov={45} />
+
+        {/* Luxury Lighting Setup */}
+        <color attach="background" args={['#0a0a0a']} />
+        <Environment preset="city" intensity={0.5} />
+        <ambientLight intensity={0.4} />
+        <spotLight position={[10, 10, 10]} angle={0.15} penumbra={1} intensity={1} castShadow />
+
+        <Suspense fallback={null}>
+          <VillaModel mode={view} />
+
+          {/* Professional Ground Shadow */}
+          <ContactShadows
+            position={[0, -0.5, 0]}
+            opacity={0.4}
+            scale={20}
+            blur={2.4}
+            far={4.5}
+          />
+
+          <BakeShadows /> {/* Optimized performance for mobile */}
+        </Suspense>
+
+        <OrbitControls
+          enableDamping
+          dampingFactor={0.05}
+          minDistance={5}
+          maxDistance={20}
+          maxPolarAngle={Math.PI / 2.1} // Prevents looking under the floor
+        />
+      </Canvas>
+
+      {/* 2. THE LUXURY UI OVERLAY */}
+      <div className="absolute bottom-12 left-1/2 -translate-x-1/2 z-10 flex items-center gap-2 p-1 bg-white/5 backdrop-blur-md rounded-2xl border border-white/10">
         <button
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
+          onClick={() => setView('exterior')}
+          className={`px-8 py-3 rounded-xl transition-all duration-500 font-medium ${view === 'exterior' ? 'bg-white text-black shadow-lg scale-105' : 'text-white/60 hover:text-white'}`}
         >
-          Count is {count}
+          EXTERIOR
         </button>
-      </section>
+        <button
+          onClick={() => setView('interior')}
+          className={`px-8 py-3 rounded-xl transition-all duration-500 font-medium ${view === 'interior' ? 'bg-white text-black shadow-lg scale-105' : 'text-white/60 hover:text-white'}`}
+        >
+          INTERIOR
+        </button>
+      </div>
 
-      <div className="ticks"></div>
+      {/* Brand Watermark */}
+      <div className="absolute top-8 left-8">
+        <h1 className="text-white font-bold tracking-tighter text-2xl">IBTIKARZ<span className="text-[#d4af37]">.</span></h1>
+        <p className="text-white/40 text-xs tracking-widest uppercase">Villa Explorer Prototype</p>
+      </div>
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
+      <Loader /> {/* Sleek default loading bar */}
+    </div>
   )
 }
 
