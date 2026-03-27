@@ -24,15 +24,25 @@ function VillaModel({ mode }) {
 function App() {
   const [view, setView] = useState('exterior');
 
+  // src/App.jsx
   return (
-    <div className="relative w-full h-screen bg-[#050505] overflow-hidden">
+    <main className="w-full h-screen bg-[#050505] relative">
       <ExperienceUI view={view} setView={setView} />
-
-      <Canvas shadows dpr={[1, 2]}>
-        <VillaModel mode={view} />
+      <Canvas
+        camera={{ position: [15, 15, 15], fov: 35 }}
+        className="w-full h-full"
+      >
+        <Suspense fallback={null}>
+          <Environment preset="night" />
+          <VillaModel view={view} />
+          <ContactShadows opacity={0.5} scale={20} blur={2} />
+        </Suspense>
+        <OrbitControls makeDefault enableDamping />
       </Canvas>
-    </div>
+    </main>
   );
 }
+
+
 
 export default App
