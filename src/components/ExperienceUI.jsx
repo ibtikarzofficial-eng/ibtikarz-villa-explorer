@@ -47,8 +47,8 @@ export default function ExperienceUI({ view, setView }) {
                     <button
                         onClick={() => setView('exterior')}
                         className={`px-8 py-3 rounded-full text-xs font-bold tracking-widest transition-all duration-500 ${view === 'exterior'
-                                ? 'bg-white text-black shadow-[0_0_20px_rgba(255,255,255,0.3)]'
-                                : 'text-white/40 hover:text-white'
+                            ? 'bg-white text-black shadow-[0_0_20px_rgba(255,255,255,0.3)]'
+                            : 'text-white/40 hover:text-white'
                             }`}
                     >
                         EXTERIOR
@@ -56,8 +56,8 @@ export default function ExperienceUI({ view, setView }) {
                     <button
                         onClick={() => setView('interior')}
                         className={`px-8 py-3 rounded-full text-xs font-bold tracking-widest transition-all duration-500 ${view === 'interior'
-                                ? 'bg-white text-black shadow-[0_0_20px_rgba(255,255,255,0.3)]'
-                                : 'text-white/40 hover:text-white'
+                            ? 'bg-white text-black shadow-[0_0_20px_rgba(255,255,255,0.3)]'
+                            : 'text-white/40 hover:text-white'
                             }`}
                     >
                         INTERIOR
