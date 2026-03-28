@@ -58,8 +58,8 @@ export default function SceneExterior({ wallColor, sunAngle = 45, isNight }) {
                     position={sunPos}
                     intensity={sunIntensity}
                     castShadow
-                    shadow-mapSize={[4096, 4096]}
-                    shadow-bias={-0.00005}
+                    shadow-mapSize={[1024, 1024]} // DOWNGRADED FROM 4096
+                    shadow-bias={-0.0005}
                     color="#ffe8c4"
                 >
                     <orthographicCamera attach="shadow-camera" args={[-20, 20, 20, -20, 0.1, 100]} />
@@ -95,10 +95,10 @@ export default function SceneExterior({ wallColor, sunAngle = 45, isNight }) {
                 target={[0, 4, 0]}
             />
 
-            <EffectComposer multisampling={4}>
-                <N8AO intensity={1.5} aoRadius={2} distanceFalloff={1} color="#000000" />
-                {/* Cranking bloom intensity and threshold creates the glowing light effect */}
-                <Bloom luminanceThreshold={isNight ? 0.8 : 1.2} intensity={isNight ? 1.5 : 0.15} mipmapBlur />
+            <EffectComposer disableNormalPass multisampling={0}>
+                {/* halfRes saves massive frame drops on laptops */}
+                <N8AO halfRes aoRadius={2} intensity={1.5} distanceFalloff={1} color="#000000" />
+                <Bloom luminanceThreshold={isNight ? 0.8 : 1.2} intensity={isNight ? 1.5 : 0.15} mipmapBlur resolutionScale={0.5} />
                 <ToneMapping mode={THREE.ACESFilmicToneMapping} exposure={1.1} />
                 <Vignette darkness={0.4} offset={0.2} />
             </EffectComposer>

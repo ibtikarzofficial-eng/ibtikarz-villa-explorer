@@ -155,13 +155,23 @@ export default function App() {
 
         {/* Canvas */}
         <div ref={canvasRef} className="absolute inset-0 z-0">
-          <Canvas shadows dpr={[1, 2]} camera={{ position: [15, 8, 15], fov: 40 }} gl={{ antialias: true, toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 1.2, preserveDrawingBuffer: true, powerPreference: 'high-performance' }}>
-            {view === 'exterior' ? (
-              // Pass isNight down to the scene
-              <SceneExterior wallColor={wallColor} sunAngle={sunAngle} isNight={isNight} />
-            ) : (
-              <SceneInterior station={INTERIOR_STATIONS[stationIdx]} />
-            )}
+          <Canvas
+            shadows
+            dpr={[1, 1.5]} // CAP THIS. Prevents phones from melting.
+            camera={{ position: [15, 8, 15], fov: 40 }}
+            gl={{
+              antialias: false, // Turned off to save GPU
+              toneMapping: THREE.ACESFilmicToneMapping,
+              toneMappingExposure: 1.2,
+              preserveDrawingBuffer: true,
+              powerPreference: 'high-performance'
+            }}
+          >{view === 'exterior' ? (
+            // Pass isNight down to the scene
+            <SceneExterior wallColor={wallColor} sunAngle={sunAngle} isNight={isNight} />
+          ) : (
+            <SceneInterior station={INTERIOR_STATIONS[stationIdx]} />
+          )}
           </Canvas>
         </div>
 

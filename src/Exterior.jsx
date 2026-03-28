@@ -3,7 +3,7 @@ import * as THREE from 'three';
 import { useGLTF } from '@react-three/drei';
 
 export default function Exterior({ wallColor, isNight, ...props }) {
-  const { scene } = useGLTF('/exterior.glb');
+  const { scene } = useGLTF('/exterior-opt.glb');
 
   const getMaterial = useMemo(() => {
     return {
@@ -12,16 +12,14 @@ export default function Exterior({ wallColor, isNight, ...props }) {
       path: new THREE.MeshStandardMaterial({ color: '#d4d4d4', roughness: 0.8, metalness: 0.1 }),
       fence: new THREE.MeshStandardMaterial({ color: '#111111', metalness: 0.8, roughness: 0.3 }),
 
-      glass: new THREE.MeshPhysicalMaterial({
-        color: isNight ? '#020202' : '#ffffff',
-        metalness: 1.0,
-        roughness: 0.05,
+      // DOWNGRADED GLASS: Dropped transmission and clearcoat to save FPS
+      glass: new THREE.MeshStandardMaterial({
+        color: isNight ? '#050505' : '#8899a6',
+        metalness: 0.95,
+        roughness: 0.1,
         envMapIntensity: isNight ? 1.0 : 4.0,
-        transmission: isNight ? 0.0 : 0.1,
         transparent: true,
-        opacity: 0.9,
-        clearcoat: 1.0,
-        clearcoatRoughness: 0.1,
+        opacity: 0.85,
       }),
 
       lightFixture: new THREE.MeshStandardMaterial({
@@ -135,3 +133,5 @@ export default function Exterior({ wallColor, isNight, ...props }) {
 
   return <primitive object={scene} {...props} />;
 }
+
+useGLTF.preload('/exterior-opt.glb');
