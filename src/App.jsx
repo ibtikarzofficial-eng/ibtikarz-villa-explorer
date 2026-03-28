@@ -222,10 +222,11 @@ export default function App() {
           </div>
 
           {/* Bottom UI Dock & CTA */}
-          <footer className="absolute inset-x-0 bottom-8 md:bottom-12 flex justify-between items-end px-6 md:px-10 pointer-events-none">
+          {/* Bottom UI Dock & CTA */}
+          <footer className="absolute inset-x-0 bottom-20 md:bottom-12 flex flex-col md:flex-row justify-between items-center md:items-end px-4 md:px-10 pointer-events-none gap-6 z-50">
 
             {/* Left/Center: The Command Dock */}
-            <div className="pointer-events-auto flex items-center bg-[#0a0a0a]/60 backdrop-blur-xl border border-white/10 rounded-full pl-6 pr-4 py-3 shadow-2xl">
+            <div className="pointer-events-auto flex items-center bg-[#0a0a0a]/60 backdrop-blur-xl border border-white/10 rounded-full pl-6 pr-4 py-3 shadow-2xl scale-90 md:scale-100 origin-bottom">
 
               {/* Scene Toggle */}
               <div className="flex items-center gap-3 pr-6 border-r border-white/10">
