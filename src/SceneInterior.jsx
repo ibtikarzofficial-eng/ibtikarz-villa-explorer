@@ -67,10 +67,10 @@ export default function SceneInterior({ station }) {
                 maxDistance={500}
             />
 
-            {/* Interior environment — warm apartment feel */}
-            <Environment preset="apartment" environmentIntensity={0.4} />
+            {/* ADD THIS EXACT LINE TO FIX THE TRAILING */}
+            <color attach="background" args={['#050505']} />
 
-            {/* Warm ambient — dim, like real indoor lighting */}
+            <Environment preset="apartment" environmentIntensity={0.4} />
             <ambientLight intensity={0.8} color="#fff3d6" />
 
             {/* Two ceiling zones — no castShadow on point lights (too expensive) */}
@@ -90,4 +90,4 @@ export default function SceneInterior({ station }) {
             </Suspense>
         </>
     );
-}
+}

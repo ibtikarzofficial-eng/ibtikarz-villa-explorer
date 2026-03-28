@@ -1,97 +1,107 @@
-import { Suspense, useRef, useCallback } from 'react';
-import { Environment, ContactShadows, OrbitControls, Center, AccumulativeShadows, RandomizedLight } from '@react-three/drei';
+import React, { Suspense, useMemo } from 'react';
+import * as THREE from 'three';
+import { Environment, OrbitControls, Center, useTexture, Sky, Stars, ContactShadows } from '@react-three/drei';
+import { EffectComposer, N8AO, Bloom, Vignette, ToneMapping } from '@react-three/postprocessing';
 import Exterior from './Exterior';
 
-export default function SceneExterior({ wallColor, sunAngle = 45 }) {
-    // Convert angle (degrees) to sun XZ position on an arc above the scene
-    const rad = (sunAngle * Math.PI) / 180;
-    const sunX = Math.cos(rad) * 22;
-    const sunZ = Math.sin(rad) * 12;
-    const sunY = 18 + Math.sin(rad) * 8; // higher at midday
+const Ground = React.memo(({ isNight }) => {
+    const textures = useTexture({
+        map: '/textures/grass_color.jpg',
+        normalMap: '/textures/grass_normal.jpg',
+        roughnessMap: '/textures/grass_roughness.jpg',
+    });
 
-    // Auto-rotate resume after 2s idle
-    const orbitRef = useRef();
-    const idleTimer = useRef(null);
-    const onInteractStart = useCallback(() => {
-        if (orbitRef.current) orbitRef.current.autoRotate = false;
-        clearTimeout(idleTimer.current);
-    }, []);
-    const onInteractEnd = useCallback(() => {
-        idleTimer.current = setTimeout(() => {
-            if (orbitRef.current) orbitRef.current.autoRotate = true;
-        }, 2000);
-    }, []);
+    useMemo(() => {
+        Object.values(textures).forEach(texture => {
+            if (texture) {
+                texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+                texture.repeat.set(240, 240);
+                texture.anisotropy = 16;
+            }
+        });
+    }, [textures]);
+
+    return (
+        <mesh receiveShadow rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.01, 0]}>
+            <planeGeometry args={[800, 800]} />
+            <meshStandardMaterial
+                {...textures}
+                color={isNight ? "#4a4a4a" : "#e0e0e0"} // Darken grass at night
+                metalness={0.0}
+            />
+        </mesh>
+    );
+});
+
+export default function SceneExterior({ wallColor, sunAngle = 45, isNight }) {
+    const rad = (sunAngle * Math.PI) / 180;
+    const sunPos = useMemo(() => [Math.cos(rad) * 30, 12, Math.sin(rad) * 30], [sunAngle]);
+
+    // Dynamic lighting calculations
+    const envIntensity = isNight ? 0.05 : 0.6 + Math.sin(rad) * 0.4;
+    const fogColor = isNight ? '#030508' : '#c2cbd2';
+    const ambientColor = isNight ? '#2b3a55' : '#e6f0ff';
+    const ambientIntensity = isNight ? 0.2 : 0.4;
+    const sunIntensity = isNight ? 0 : 3.5;
+
     return (
         <>
-            {/* Warm deep twilight sky — luxury feel without pitch black */}
-            <color attach="background" args={['#1a1f2e']} />
-            <fog attach="fog" args={['#1a1f2e', 60, 200]} />
+            {!isNight && <Sky sunPosition={sunPos} turbidity={0.3} rayleigh={0.8} />}
+            {isNight && <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade speed={1} />}
 
-            {/* Sunset preset = warm natural bounce + sky reflections */}
-            <Environment preset="sunset" environmentIntensity={1.2} />
-            {/* Boosted ambient so no face is completely black */}
-            <ambientLight intensity={0.9} color="#fff5e0" />
+            <Environment preset="city" environmentIntensity={envIntensity} />
+            <fog attach="fog" args={[fogColor, 40, 150]} />
 
-            {/* Primary sun — driven by the daytime slider */}
-            <directionalLight
-                position={[sunX, sunY, sunZ]}
-                intensity={3.5}
-                castShadow
-                shadow-mapSize={[2048, 2048]}
-                shadow-bias={-0.0003}
-                shadow-camera-near={0.5}
-                shadow-camera-far={200}
-                shadow-camera-left={-40}
-                shadow-camera-right={40}
-                shadow-camera-top={40}
-                shadow-camera-bottom={-40}
-                color="#ffe9b0"
-            />
+            {/* Turn off the sun at night to save performance */}
+            {!isNight && (
+                <directionalLight
+                    position={sunPos}
+                    intensity={sunIntensity}
+                    castShadow
+                    shadow-mapSize={[4096, 4096]}
+                    shadow-bias={-0.00005}
+                    color="#ffe8c4"
+                >
+                    <orthographicCamera attach="shadow-camera" args={[-20, 20, 20, -20, 0.1, 100]} />
+                </directionalLight>
+            )}
 
-            {/* Cool sky fill from opposite side — simulates scattered sky light */}
-            <directionalLight position={[-15, 12, -15]} intensity={1.2} color="#a8c8f0" />
+            <ambientLight intensity={ambientIntensity} color={ambientColor} />
 
-            {/* Subtle warm rim light from behind to separate building from bg */}
-            <pointLight position={[0, 8, -25]} intensity={2.0} color="#ff9f45" distance={80} />
+            <Suspense fallback={null}>
+                <Ground isNight={isNight} />
+                <Center top position={[0, 0, 0]}>
+                    <Exterior wallColor={wallColor} isNight={isNight} />
+                </Center>
 
-            <group position={[0, -1, 0]}>
-                <Suspense fallback={null}>
-                    <Center top>
-                        <Exterior wallColor={wallColor} />
-                    </Center>
-                </Suspense>
-            </group>
-
-            {/* Soft baked shadows on the ground plane */}
-            <AccumulativeShadows
-                temporal
-                frames={16}
-                color="#1a1210"
-                colorBlend={2.5}
-                opacity={0.75}
-                scale={80}
-                position={[0, -1.01, 0]}
-            >
-                <RandomizedLight amount={4} radius={6} ambient={0.6} position={[18, 22, 12]} bias={0.001} />
-            </AccumulativeShadows>
-
-            {/* Quick contact shadows for real-time depth */}
-            <ContactShadows position={[0, -1.02, 0]} opacity={0.35} scale={50} blur={3} far={5} color="#000000" />
-
+                <ContactShadows
+                    position={[0, 0.01, 0]}
+                    scale={40}
+                    resolution={1024}
+                    far={10}
+                    blur={2}
+                    opacity={isNight ? 0.9 : 0.6}
+                    color="#000000"
+                />
+            </Suspense>
 
             <OrbitControls
-                ref={orbitRef}
                 makeDefault
                 enableDamping
                 dampingFactor={0.05}
-                maxPolarAngle={Math.PI / 2.1}
+                maxPolarAngle={Math.PI / 2.05}
                 minDistance={10}
-                maxDistance={50}
-                autoRotate
-                autoRotateSpeed={0.35}
-                onStart={onInteractStart}
-                onEnd={onInteractEnd}
+                maxDistance={40}
+                target={[0, 4, 0]}
             />
+
+            <EffectComposer multisampling={4}>
+                <N8AO intensity={1.5} aoRadius={2} distanceFalloff={1} color="#000000" />
+                {/* Cranking bloom intensity and threshold creates the glowing light effect */}
+                <Bloom luminanceThreshold={isNight ? 0.8 : 1.2} intensity={isNight ? 1.5 : 0.15} mipmapBlur />
+                <ToneMapping mode={THREE.ACESFilmicToneMapping} exposure={1.1} />
+                <Vignette darkness={0.4} offset={0.2} />
+            </EffectComposer>
         </>
     );
 }
