@@ -157,10 +157,10 @@ export default function App() {
         <div ref={canvasRef} className="absolute inset-0 z-0">
           <Canvas
             shadows
-            dpr={[1, 1.5]} // CAP THIS. Prevents phones from melting.
+            dpr={1} // HARD CAP. THIS SAVES THE PHONE.
             camera={{ position: [15, 8, 15], fov: 40 }}
             gl={{
-              antialias: false, // Turned off to save GPU
+              antialias: false,
               toneMapping: THREE.ACESFilmicToneMapping,
               toneMappingExposure: 1.2,
               preserveDrawingBuffer: true,

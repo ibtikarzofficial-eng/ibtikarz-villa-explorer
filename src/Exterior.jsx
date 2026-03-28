@@ -82,32 +82,15 @@ export default function Exterior({ wallColor, isNight, ...props }) {
         child.visible = true;
       }
 
-      // 4. APPLY SHADOWS (Except for the dynamically added lights!)
+      // 4. APPLY SHADOWS
       child.castShadow = true;
       child.receiveShadow = true;
 
-      // 5. MATERIAL & DYNAMIC LIGHT INJECTION
+      // 5. MATERIAL INJECTION (NO MORE REAL LIGHTS!)
       let material;
       if (isLightBulb) {
         material = getMaterial.lightFixture;
-
-        // HACK: Inject a physical light directly into the 3D model node
-        if (!child.userData.hasRealLight) {
-          // PointLight( color, intensity, distance, decay )
-          const washLight = new THREE.PointLight('#ffc87a', 0, 4.5, 2);
-          washLight.position.set(0, -0.1, 0); // Drop it slightly below the fixture
-          washLight.castShadow = false; // CRITICAL: Do not turn this on or the browser dies
-
-          child.add(washLight);
-          child.userData.hasRealLight = true;
-          child.userData.washLight = washLight;
-        }
-
-        // Toggle the light wash on and off based on night mode
-        if (child.userData.washLight) {
-          child.userData.washLight.intensity = isNight ? 2.5 : 0;
-        }
-
+        // NOTE: The 50 PointLights have been completely removed from here to save mobile GPUs.
       } else if (name.includes('rectangle007')) {
         material = getMaterial.reflectiveGround;
       } else if (name.includes('line061')) {
@@ -129,7 +112,7 @@ export default function Exterior({ wallColor, isNight, ...props }) {
       }
     });
 
-  }, [scene, getMaterial, isNight]); // Added isNight to dependencies so lights update
+  }, [scene, getMaterial]); // Removed isNight dependency since we aren't updating real lights anymore
 
   return <primitive object={scene} {...props} />;
 }

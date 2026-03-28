@@ -96,9 +96,9 @@ export default function SceneExterior({ wallColor, sunAngle = 45, isNight }) {
             />
 
             <EffectComposer disableNormalPass multisampling={0}>
-                {/* halfRes saves massive frame drops on laptops */}
-                <N8AO halfRes aoRadius={2} intensity={1.5} distanceFalloff={1} color="#000000" />
-                <Bloom luminanceThreshold={isNight ? 0.8 : 1.2} intensity={isNight ? 1.5 : 0.15} mipmapBlur resolutionScale={0.5} />
+                {/* REMOVED N8AO COMPLETELY. Mobile GPUs cannot handle it. */}
+                {/* Reduced bloom resolution to save massive memory */}
+                <Bloom luminanceThreshold={isNight ? 0.8 : 1.2} intensity={isNight ? 1.5 : 0.15} mipmapBlur resolutionScale={0.25} />
                 <ToneMapping mode={THREE.ACESFilmicToneMapping} exposure={1.1} />
                 <Vignette darkness={0.4} offset={0.2} />
             </EffectComposer>
