@@ -223,13 +223,15 @@ export default function App() {
 
           {/* Bottom UI Dock & CTA */}
           {/* Bottom UI Dock & CTA */}
-          <footer className="absolute inset-x-0 bottom-20 md:bottom-12 flex flex-col md:flex-row justify-between items-center md:items-end px-4 md:px-10 pointer-events-none gap-6 z-50">
+          {/* Bottom UI Dock & CTA */}
+          <footer className="absolute inset-x-0 bottom-6 md:bottom-12 flex flex-col md:flex-row justify-between items-center md:items-end px-4 md:px-10 pointer-events-none gap-4 z-50">
 
             {/* Left/Center: The Command Dock */}
-            <div className="pointer-events-auto flex items-center bg-[#0a0a0a]/60 backdrop-blur-xl border border-white/10 rounded-full pl-6 pr-4 py-3 shadow-2xl scale-90 md:scale-100 origin-bottom">
+            {/* Switched to flex-col on mobile so it stacks neatly into a rounded rectangle, then expands to a full pill on desktop */}
+            <div className="pointer-events-auto flex flex-col md:flex-row items-center bg-[#0a0a0a]/80 backdrop-blur-xl border border-white/10 rounded-[24px] md:rounded-full shadow-2xl w-full md:w-auto">
 
-              {/* Scene Toggle */}
-              <div className="flex items-center gap-3 pr-6 border-r border-white/10">
+              {/* Top Row (Mobile) / Left Side (Desktop): Scene Toggle */}
+              <div className="flex items-center justify-center w-full md:w-auto gap-3 px-6 py-3 border-b md:border-b-0 md:border-r border-white/10">
                 <button
                   onClick={() => switchView('exterior')}
                   className={`text-[9px] tracking-[0.3em] font-bold transition-colors ${view === 'exterior' ? 'text-[#d4af37]' : 'text-white/30 hover:text-white'}`}
@@ -245,87 +247,72 @@ export default function App() {
                 </button>
               </div>
 
-              {/* Dynamic Controls based on View */}
-              <AnimatePresence mode="wait">
-                {view === 'exterior' ? (
-                  <motion.div
-                    key="ext-controls"
-                    initial={{ opacity: 0, width: 0 }}
-                    animate={{ opacity: 1, width: 'auto' }}
-                    exit={{ opacity: 0, width: 0 }}
-                    className="flex items-center overflow-hidden"
-                  >
-                    {/* Time & Lighting */}
-                    <div className="flex items-center gap-4 px-6 border-r border-white/10">
-                      <button
-                        onClick={() => setIsNight(!isNight)}
-                        className={`transition-colors ${isNight ? 'text-[#d4af37]' : 'text-white/40 hover:text-white'}`}
-                        title="Toggle Day/Night"
-                      >
-                        {isNight ? (
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
-                        ) : (
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
-                        )}
-                      </button>
-
-                      <div className={`flex items-center gap-3 transition-opacity ${isNight ? 'opacity-30 pointer-events-none' : 'opacity-100'}`}>
-                        <input
-                          type="range"
-                          min="10"
-                          max="170"
-                          value={sunAngle}
-                          onChange={e => setSunAngle(Number(e.target.value))}
-                          className="w-24 md:w-32 h-1 bg-white/10 rounded-lg appearance-none accent-[#d4af37] cursor-pointer"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Materials */}
-                    <div className="flex items-center gap-3 pl-6 pr-2">
-                      {MATERIALS.map((m, idx) => (
+              {/* Bottom Row (Mobile) / Right Side (Desktop): Controls */}
+              <div className="flex items-center justify-center px-4 py-3 w-full md:w-auto min-w-[280px]">
+                <AnimatePresence mode="wait">
+                  {view === 'exterior' ? (
+                    <motion.div
+                      key="ext-controls"
+                      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                      className="flex items-center justify-center gap-4 w-full"
+                    >
+                      {/* Time & Lighting */}
+                      <div className="flex items-center gap-3 pr-4 border-r border-white/10">
                         <button
-                          key={m.hex}
-                          onClick={() => setWallColor(m.hex)}
-                          className={`w-4 h-4 rounded-full transition-all duration-300 ${wallColor === m.hex ? 'scale-125 ring-1 ring-offset-2 ring-offset-[#0a0a0a]' : 'opacity-40 hover:opacity-100 hover:scale-110'}`}
-                          style={{ backgroundColor: m.hex, '--tw-ring-color': GOLD }}
-                          title={`${m.name} (${idx + 1})`}
-                          onMouseEnter={(e) => setTooltip({ text: m.name, position: { x: e.clientX, y: e.clientY } })}
-                          onMouseLeave={() => setTooltip(null)}
-                        />
-                      ))}
-                    </div>
-                  </motion.div>
-                ) : (
-                  <motion.div
-                    key="int-controls"
-                    initial={{ opacity: 0, width: 0 }}
-                    animate={{ opacity: 1, width: 'auto' }}
-                    exit={{ opacity: 0, width: 0 }}
-                    className="flex items-center gap-6 px-6 overflow-hidden"
-                  >
-                    <button
-                      onClick={() => setStationIdx(i => (i - 1 + 3) % 3)}
-                      className="text-white/30 hover:text-[#d4af37] transition-all"
+                          onClick={() => setIsNight(!isNight)}
+                          className={`transition-colors ${isNight ? 'text-[#d4af37]' : 'text-white/40 hover:text-white'}`}
+                        >
+                          {isNight ? (
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                          ) : (
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                          )}
+                        </button>
+
+                        <div className={`flex items-center transition-opacity ${isNight ? 'opacity-30 pointer-events-none' : 'opacity-100'}`}>
+                          {/* Shrunk the slider slightly on mobile so it doesn't push the colors off-screen */}
+                          <input
+                            type="range" min="10" max="170" value={sunAngle}
+                            onChange={e => setSunAngle(Number(e.target.value))}
+                            className="w-20 md:w-28 h-1 bg-white/10 rounded-lg appearance-none accent-[#d4af37] cursor-pointer"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Materials */}
+                      <div className="flex items-center gap-2 md:gap-3">
+                        {MATERIALS.map((m, idx) => (
+                          <button
+                            key={m.hex} onClick={() => setWallColor(m.hex)}
+                            className={`w-4 h-4 rounded-full transition-all duration-300 ${wallColor === m.hex ? 'scale-125 ring-1 ring-offset-2 ring-offset-[#0a0a0a]' : 'opacity-40 hover:opacity-100 hover:scale-110'}`}
+                            style={{ backgroundColor: m.hex, '--tw-ring-color': GOLD }}
+                          />
+                        ))}
+                      </div>
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      key="int-controls"
+                      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                      className="flex items-center justify-center gap-6 w-full"
                     >
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 12H5M12 19l-7-7 7-7" /></svg>
-                    </button>
-                    <span style={{ color: GOLD }} className="text-[9px] tracking-[0.4em] font-bold w-24 text-center uppercase">AREA 0{stationIdx + 1}</span>
-                    <button
-                      onClick={() => setStationIdx(i => (i + 1) % 3)}
-                      className="text-white/30 hover:text-[#d4af37] transition-all"
-                    >
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
-                    </button>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+                      <button onClick={() => setStationIdx(i => (i - 1 + 3) % 3)} className="text-white/30 hover:text-[#d4af37]">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 12H5M12 19l-7-7 7-7" /></svg>
+                      </button>
+                      <span style={{ color: GOLD }} className="text-[9px] tracking-[0.4em] font-bold w-24 text-center uppercase">AREA 0{stationIdx + 1}</span>
+                      <button onClick={() => setStationIdx(i => (i + 1) % 3)} className="text-white/30 hover:text-[#d4af37]">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
+                      </button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
             </div>
 
-            {/* Right: The CTA */}
+            {/* CTA Button */}
             <button
               onClick={() => setAuditOpen(true)}
-              className="pointer-events-auto group relative overflow-hidden bg-black/40 backdrop-blur-xl border border-white/10 hover:border-[#d4af37] text-white/70 hover:text-[#d4af37] text-[9px] tracking-[0.3em] font-bold py-3.5 px-8 rounded-full transition-all duration-500 uppercase shadow-2xl"
+              className="pointer-events-auto group relative overflow-hidden bg-black/40 backdrop-blur-xl border border-white/10 hover:border-[#d4af37] text-white/70 hover:text-[#d4af37] text-[9px] tracking-[0.3em] font-bold py-3.5 px-8 rounded-full transition-all duration-500 uppercase shadow-2xl shrink-0"
             >
               <span className="relative z-10">Request Audit</span>
               <div className="absolute inset-0 bg-[#d4af37]/10 translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-out" />
