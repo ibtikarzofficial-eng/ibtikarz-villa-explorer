@@ -334,8 +334,6 @@ export default function App() {
 
 // ─── Audit Modal ─────────────────────────────────────────────────────
 function AuditModal({ open, onClose }) {
-  const [sent, setSent] = useState(false);
-  const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({ name: '', email: '', message: '' });
   const [errors, setErrors] = useState({});
 
@@ -348,29 +346,30 @@ function AuditModal({ open, onClose }) {
     return Object.keys(newErrors).length === 0;
   };
 
-  const submit = async (e) => {
+  const submit = (e) => {
     e.preventDefault();
     if (!validate()) return;
 
-    setLoading(true);
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    setLoading(false);
-    setSent(true);
+    // Convert local number to international format for the WhatsApp API
+    const waNumber = "923247556451";
 
-    setTimeout(() => {
-      onClose();
-      setSent(false);
-      setForm({ name: '', email: '', message: '' });
-      setErrors({});
-    }, 2500);
+    // Format the form data into a bolded WhatsApp message
+    const waMessage = `*New Digital Audit Request - IbtikarZ*%0A%0A*Name:* ${form.name}%0A*Email:* ${form.email}%0A*Project Details:* ${form.message || 'No details provided.'}`;
+
+    // Trigger WhatsApp in a new tab
+    window.open(`https://wa.me/${waNumber}?text=${waMessage}`, '_blank');
+
+    // Clean up and close the modal
+    setForm({ name: '', email: '', message: '' });
+    setErrors({});
+    onClose();
   };
 
   return (
     <AnimatePresence>
       {open && (
         <motion.div
-          className="absolute inset-0 z-50 flex items-center justify-center p-4"
+          className="absolute inset-0 z-[100] flex items-center justify-center p-4"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -385,84 +384,66 @@ function AuditModal({ open, onClose }) {
             exit={{ y: 20, opacity: 0, scale: 0.95 }}
             transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
           >
-            {!sent ? (
-              <>
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 rounded-full" style={{ background: GOLD_GRADIENT }} />
-                  <div>
-                    <p style={{ color: GOLD }} className="text-[10px] tracking-[0.4em] uppercase font-bold">Ibtikarz</p>
-                    <h2 className="text-white text-lg font-semibold tracking-tight">Digital Audit Request</h2>
-                  </div>
-                </div>
-
-                <p className="text-white/50 text-xs leading-relaxed mb-6">
-                  Our architectural team will analyze your property and deliver a comprehensive visual report within 48 hours.
-                </p>
-
-                <form onSubmit={submit} className="flex flex-col gap-4">
-                  <div>
-                    <input
-                      required
-                      placeholder="Full Name"
-                      value={form.name}
-                      onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
-                      className={`w-full bg-white/5 border ${errors.name ? 'border-red-500/50' : 'border-white/10'} text-white placeholder:text-white/30 text-xs tracking-wider px-4 py-3.5 outline-none focus:border-[#d4af37]/70 transition-colors rounded-lg`}
-                    />
-                    {errors.name && <p className="text-red-400 text-[10px] mt-1">{errors.name}</p>}
-                  </div>
-
-                  <div>
-                    <input
-                      required
-                      type="email"
-                      placeholder="Email Address"
-                      value={form.email}
-                      onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
-                      className={`w-full bg-white/5 border ${errors.email ? 'border-red-500/50' : 'border-white/10'} text-white placeholder:text-white/30 text-xs tracking-wider px-4 py-3.5 outline-none focus:border-[#d4af37]/70 transition-colors rounded-lg`}
-                    />
-                    {errors.email && <p className="text-red-400 text-[10px] mt-1">{errors.email}</p>}
-                  </div>
-
-                  <textarea
-                    rows={3}
-                    placeholder="Project details (optional)"
-                    value={form.message}
-                    onChange={e => setForm(f => ({ ...f, message: e.target.value }))}
-                    className="w-full bg-white/5 border border-white/10 text-white placeholder:text-white/30 text-xs tracking-wider px-4 py-3.5 outline-none focus:border-[#d4af37]/70 transition-colors rounded-lg resize-none"
-                  />
-
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="text-black text-[10px] tracking-[0.3em] font-bold py-4 uppercase transition-all rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
-                    style={{ background: loading ? '#666' : GOLD_GRADIENT }}
-                  >
-                    {loading ? 'Submitting...' : 'Send Request'}
-                  </button>
-                </form>
-
-                <button
-                  onClick={onClose}
-                  className="absolute top-4 right-4 text-white/30 hover:text-white text-xl leading-none transition-colors"
-                  aria-label="Close modal"
-                >
-                  ✕
-                </button>
-              </>
-            ) : (
-              <div className="text-center py-10">
-                <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  className="w-16 h-16 rounded-full mx-auto mb-6 flex items-center justify-center"
-                  style={{ background: GOLD_GRADIENT }}
-                >
-                  <span className="text-black text-3xl">✓</span>
-                </motion.div>
-                <p className="text-white font-medium tracking-wide text-lg">Request Received</p>
-                <p className="text-white/40 text-xs mt-3">Our team will contact you within 48 hours.</p>
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: GOLD_GRADIENT }}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
               </div>
-            )}
+              <div>
+                <p style={{ color: GOLD }} className="text-[10px] tracking-[0.4em] uppercase font-bold">IbtikarZ</p>
+                <h2 className="text-white text-lg font-semibold tracking-tight">Direct WhatsApp Connect</h2>
+              </div>
+            </div>
+
+            <p className="text-white/50 text-xs leading-relaxed mb-6">
+              Skip the wait. Send us your project details directly on WhatsApp, and our architectural team will respond immediately.
+            </p>
+
+            <form onSubmit={submit} className="flex flex-col gap-4">
+              <div>
+                <input
+                  required
+                  placeholder="Full Name"
+                  value={form.name}
+                  onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+                  className={`w-full bg-white/5 border ${errors.name ? 'border-red-500/50' : 'border-white/10'} text-white placeholder:text-white/30 text-xs tracking-wider px-4 py-3.5 outline-none focus:border-[#d4af37]/70 transition-colors rounded-lg`}
+                />
+              </div>
+
+              <div>
+                <input
+                  required
+                  type="email"
+                  placeholder="Email Address"
+                  value={form.email}
+                  onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
+                  className={`w-full bg-white/5 border ${errors.email ? 'border-red-500/50' : 'border-white/10'} text-white placeholder:text-white/30 text-xs tracking-wider px-4 py-3.5 outline-none focus:border-[#d4af37]/70 transition-colors rounded-lg`}
+                />
+              </div>
+
+              <textarea
+                rows={3}
+                placeholder="Project details (optional)"
+                value={form.message}
+                onChange={e => setForm(f => ({ ...f, message: e.target.value }))}
+                className="w-full bg-white/5 border border-white/10 text-white placeholder:text-white/30 text-xs tracking-wider px-4 py-3.5 outline-none focus:border-[#d4af37]/70 transition-colors rounded-lg resize-none"
+              />
+
+              <button
+                type="submit"
+                className="text-black text-[10px] tracking-[0.3em] font-bold py-4 mt-2 uppercase transition-transform hover:scale-[1.02] rounded-lg"
+                style={{ background: GOLD_GRADIENT }}
+              >
+                Connect on WhatsApp
+              </button>
+            </form>
+
+            <button
+              onClick={onClose}
+              className="absolute top-4 right-4 text-white/30 hover:text-white text-xl leading-none transition-colors"
+              aria-label="Close modal"
+            >
+              ✕
+            </button>
           </motion.div>
         </motion.div>
       )}
