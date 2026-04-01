@@ -22,11 +22,13 @@ export default function Exterior({ wallColor, isNight, ...props }) {
         opacity: 0.85,
       }),
 
+      // Find the lightFixture material and update it:
       lightFixture: new THREE.MeshStandardMaterial({
         color: '#ffffff',
         emissive: '#ffb74d',
-        emissiveIntensity: isNight ? 4.0 : 0.0,
+        emissiveIntensity: isNight ? 5.0 : 0.0,
         roughness: 0.2,
+        metalness: 0.8,
       }),
 
       wood: new THREE.MeshStandardMaterial({ color: '#8b5a2b', roughness: 0.6, metalness: 0.05 }),

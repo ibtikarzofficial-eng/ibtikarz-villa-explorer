@@ -1,13 +1,17 @@
-import { Suspense, useEffect, useRef } from 'react';
-import { useFrame } from '@react-three/fiber';
-import { Environment, CameraControls, Center } from '@react-three/drei';
+import { Suspense, useEffect, useRef, useState } from 'react';
+import { useFrame, useThree } from '@react-three/fiber';
+import { Environment, CameraControls, Center, Html } from '@react-three/drei';
+import { motion } from 'framer-motion';
+import * as THREE from 'three';
 import Interior from './Interior';
 
-export default function SceneInterior({ station }) {
+export default function SceneInterior({ station, isLightMode, selectedMaterial, onStationComplete }) {
     const cameraControlsRef = useRef();
     const keys = useRef({ w: false, a: false, s: false, d: false });
+    const { camera, scene } = useThree();
+    const [hoveredMesh, setHoveredMesh] = useState(null);
+    const isTransitioning = useRef(false);
 
-    // --- WASD INPUT ---
     useEffect(() => {
         const handleKeyDown = (e) => {
             const key = e.key.toLowerCase();
@@ -25,9 +29,8 @@ export default function SceneInterior({ station }) {
         };
     }, []);
 
-    // --- FPS MOVEMENT ---
     useFrame((_, delta) => {
-        if (!cameraControlsRef.current) return;
+        if (!cameraControlsRef.current || isTransitioning.current) return;
         const speed = 15 * delta;
         if (keys.current.w) cameraControlsRef.current.forward(speed, true);
         if (keys.current.s) cameraControlsRef.current.forward(-speed, true);
@@ -35,59 +38,119 @@ export default function SceneInterior({ station }) {
         if (keys.current.d) cameraControlsRef.current.truck(speed, 0, true);
     });
 
-    // --- CINEMATIC WAYPOINT TRANSITION ---
     useEffect(() => {
         if (!cameraControlsRef.current || !station) return;
+
+        isTransitioning.current = true;
+
         cameraControlsRef.current.setLookAt(
-            station.cameraPos[0], station.cameraPos[1], station.cameraPos[2],
-            station.target[0], station.target[1], station.target[2],
+            station.cameraPos[0],
+            station.cameraPos[1],
+            station.cameraPos[2],
+            station.target[0],
+            station.target[1],
+            station.target[2],
             true
         );
-    }, [station]);
 
-    // --- VIEWFINDER HELPER (dev only) ---
+        const timer = setTimeout(() => {
+            isTransitioning.current = false;
+            if (onStationComplete) onStationComplete();
+        }, 1500);
+
+        return () => clearTimeout(timer);
+    }, [station, onStationComplete]);
+
     useEffect(() => {
-        const handleLogCoords = () => {
-            if (!cameraControlsRef.current) return;
-            const pos = cameraControlsRef.current.getPosition();
-            const target = cameraControlsRef.current.getTarget();
-            console.log(`cameraPos: [${pos.x.toFixed(2)}, ${pos.y.toFixed(2)}, ${pos.z.toFixed(2)}],`);
-            console.log(`target: [${target.x.toFixed(2)}, ${target.y.toFixed(2)}, ${target.z.toFixed(2)}],`);
+        if (!selectedMaterial || !scene) return;
+
+        scene.traverse((child) => {
+            if (child.isMesh && child === hoveredMesh) {
+                child.material = child.material.clone();
+                child.material.color = new THREE.Color(selectedMaterial);
+            }
+        });
+    }, [selectedMaterial, hoveredMesh, scene]);
+
+    const handleClick = (e) => {
+        e.stopPropagation();
+        if (e.object) {
+            setHoveredMesh(e.object);
+        }
+    };
+
+    useEffect(() => {
+        const handleMouseMove = (e) => {
+            if (!camera) return;
+            const mouse = new THREE.Vector2();
+            mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+
+            const raycaster = new THREE.Raycaster();
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObjects(scene.children, true);
+
+            if (intersects.length > 0) {
+                document.body.style.cursor = 'pointer';
+            } else {
+                document.body.style.cursor = 'default';
+            }
         };
-        window.addEventListener('log-coords', handleLogCoords);
-        return () => window.removeEventListener('log-coords', handleLogCoords);
-    }, []);
+
+        window.addEventListener('mousemove', handleMouseMove);
+        return () => window.removeEventListener('mousemove', handleMouseMove);
+    }, [camera, scene]);
 
     return (
         <>
             <CameraControls
                 ref={cameraControlsRef}
                 makeDefault
-                minDistance={0.1}
-                maxDistance={500}
+                minDistance={0.5}
+                maxDistance={100}
+                enabled={!isTransitioning.current}
+                smoothTime={0.3}
             />
 
-            {/* ADD THIS EXACT LINE TO FIX THE TRAILING */}
-            <color attach="background" args={['#050505']} />
+            <color attach="background" args={[isLightMode ? '#f5f5f0' : '#0a0a0a']} />
 
-            <Environment preset="apartment" environmentIntensity={0.4} />
-            <ambientLight intensity={0.8} color="#fff3d6" />
+            <Environment preset="apartment" environmentIntensity={isLightMode ? 0.5 : 0.3} />
 
-            {/* Two ceiling zones — no castShadow on point lights (too expensive) */}
-            <pointLight position={[0, 8, 0]} intensity={80} color="#ffe8b0" distance={40} decay={2} />
-            <pointLight position={[30, 8, 0]} intensity={50} color="#ffd890" distance={35} decay={2} />
+            <ambientLight intensity={isLightMode ? 1.2 : 0.6} color={isLightMode ? "#fff8f0" : "#1a1a2e"} />
 
-            {/* Cool window light — simulates daylight coming through windows */}
-            <directionalLight position={[50, 30, 50]} intensity={1.5} color="#c8dff0" />
+            <pointLight position={[0, 8, 0]} intensity={isLightMode ? 120 : 60} color={isLightMode ? "#fff5e6" : "#ffe8b0"} distance={50} decay={2} />
+            <pointLight position={[30, 8, 0]} intensity={isLightMode ? 80 : 40} color={isLightMode ? "#ffe8c4" : "#ffd890"} distance={40} decay={2} />
+            <pointLight position={[-30, 8, 0]} intensity={isLightMode ? 80 : 40} color={isLightMode ? "#ffe8c4" : "#ffd890"} distance={40} decay={2} />
 
-            {/* THE ARCHITECTURE */}
+            <directionalLight position={[50, 30, 50]} intensity={isLightMode ? 2.5 : 0.8} color={isLightMode ? "#e8f0f8" : "#2a3a5a"} />
+
+            <pointLight position={[0, 2, 0]} intensity={isLightMode ? 30 : 15} color="#fff8e7" distance={20} decay={2} />
+
             <Suspense fallback={null}>
-                <group scale={0.03} position={[0, -3, 0]}>
+                <group scale={0.03} position={[0, -3, 0]} onClick={handleClick}>
                     <Center top>
                         <Interior />
                     </Center>
                 </group>
             </Suspense>
+
+            {hoveredMesh && (
+                <Html position={[0, 0, 0]} center distanceFactor={10}>
+                    <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 10 }}
+                        className="px-4 py-2 rounded-full text-[9px] tracking-[0.25em] uppercase pointer-events-none shadow-xl"
+                        style={{
+                            backgroundColor: isLightMode ? 'rgba(0,0,0,0.85)' : 'rgba(255,255,255,0.95)',
+                            color: isLightMode ? '#fff' : '#000',
+                            backdropFilter: 'blur(10px)',
+                        }}
+                    >
+                        Click to Apply Material
+                    </motion.div>
+                </Html>
+            )}
         </>
     );
 }
